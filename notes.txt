@@ -1,0 +1,3 @@
+py -m manim .\scene.py CreateCircle
+py -m manim .\scene.py CreateCircle -ql //for low quality
+                                    -p // play immediately after
