@@ -119,16 +119,35 @@ class VektorelCarpim(Scene):
         eq_sign = MathTex("=").next_to(m1)
         self.play(Write(eq_sign), run_time=SHORT)
 
+        # i right multiplication
         start_x, start_y = (1, 1)
         i = m1.get_mob_matrix()[0][0].copy()
         up_left = m1.get_mob_matrix()[start_y][start_x].copy()
         up_right = m1.get_mob_matrix()[start_y][start_x + 1].copy()
         down_left = m1.get_mob_matrix()[start_y + 1][start_x].copy()
         down_right = m1.get_mob_matrix()[start_y + 1][start_x + 1].copy()
-        i_mult = m1.get_mob_matrix()[0][0].copy()
-        g_i_mult = VGroup(i_mult).next_to(eq_sign).arrange()
-        self.play(TransformMatchingShapes(i, g_i_mult), run_time=SHORT)
-        g_i_mult += MathTex("(5 * 2)")
-        g_i_mult.arrange()
+        i_mult = m1.get_mob_matrix()[0][0].copy().next_to(eq_sign)
+        self.play(TransformMatchingShapes(i, i_mult), run_time=MEDIUM)
+        ul_dr_mult = MathTex("(5 * 2 ").next_to(i_mult)
+        ur_dl_mult = MathTex("- 3 * 1)").next_to(ul_dr_mult)
+        self.play(
+            TransformMatchingShapes(VGroup(up_left, down_right), ul_dr_mult),
+            run_time=MEDIUM,
+        )
+        self.play(
+            TransformMatchingShapes(VGroup(up_right, down_left), ur_dl_mult),
+            run_time=MEDIUM,
+        )
+        i_val = MathTex("7").next_to(i_mult)
+        self.play(Transform(VGroup(ul_dr_mult, ur_dl_mult), i_val, run_time=MEDIUM))
+
+        # return back to color
+        self.play(
+            LaggedStart(
+                *[ApplyMethod(entry.set_opacity, 1) for entry in entries_to_dim],
+                lag_ratio=0.2,
+                run_time=0.5
+            )
+        )
 
         self.wait(2)
