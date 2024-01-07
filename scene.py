@@ -12,6 +12,69 @@ def colorIJK(ijk: MathTex, ijk_tex_strings: [str], ijk_colors: [color]) -> None:
 
 class VektorelCarpim(Scene):
     def construct(self):
+        # helper functions
+        def dim_rows_cols(
+            entries_to_dim: VGroup, entries_to_highlight: VGroup, col_to_exclude: int
+        ) -> None:
+            for y in range(len(m1.get_mob_matrix())):
+                for x in range(len(m1.get_mob_matrix()[y])):
+                    entry = m1.get_mob_matrix()[y][x]
+                    if x == col_to_exclude and y == 0:
+                        continue
+                    if x == col_to_exclude or y == 0:
+                        entries_to_dim.add(entry)
+                    else:
+                        entries_to_highlight.add(entry)
+            self.play(
+                LaggedStart(
+                    *[ApplyMethod(entry.set_opacity, 0.5) for entry in entries_to_dim],
+                    lag_ratio=0.2,
+                    run_time=0.5,
+                )
+            )
+
+        def play_multiplications(
+            letter: MathTex,
+            letter_next_to: MathTex,
+            up_left: MathTex,
+            up_right: MathTex,
+            down_left: MathTex,
+            down_right: MathTex,
+            sign: MathTex,
+        ) -> MathTex:
+            "returns the letter"
+            ul_int = int(up_left.tex_string)
+            ur_int = int(up_right.tex_string)
+            dl_int = int(down_left.tex_string)
+            dr_int = int(down_right.tex_string)
+            sign_copy = sign.copy().next_to(letter_next_to)
+            self.play(TransformMatchingShapes(sign, sign_copy), run_time=MEDIUM)
+            letter_mult = letter.copy().next_to(sign_copy)
+            self.play(TransformMatchingShapes(letter, letter_mult), run_time=MEDIUM)
+            ul_dr_mult = MathTex(f"({ul_int} * {dr_int} ").next_to(letter_mult)
+            ur_dl_mult = MathTex(f"- {ur_int} * {dl_int})").next_to(ul_dr_mult)
+            self.play(
+                TransformMatchingShapes(VGroup(up_left, down_right), ul_dr_mult),
+                run_time=MEDIUM,
+            )
+            self.play(
+                TransformMatchingShapes(VGroup(up_right, down_left), ur_dl_mult),
+                run_time=MEDIUM,
+            )
+            letter_val = MathTex(f"{ul_int*dr_int - ur_int * dl_int}").next_to(
+                letter_mult
+            )
+            self.play(
+                Transform(
+                    VGroup(ul_dr_mult, ur_dl_mult),
+                    letter_val,
+                    run_time=MEDIUM,
+                    replace_mobject_with_target_in_scene=True,
+                )
+            )
+            self.play(Swap(letter_mult, letter_val), run_time=SHORT)
+            return letter_mult
+
         # global variables
         isolated_subs = [r"\hat{\textbf{\i}}", r"\hat{\textbf{\j}}", r"\hat{k}"]
         ijk_colors = [RED, GREEN, BLUE]
@@ -31,7 +94,6 @@ class VektorelCarpim(Scene):
 
         for eq in range(1, len(g), 2):
             colorIJK(g[eq], g[eq].tex_strings[1::2], ijk_colors)
-        UL
         self.play(
             LaggedStart(
                 Create(g[:2]),
@@ -79,6 +141,7 @@ class VektorelCarpim(Scene):
         self.play(Write(axb))
 
         # Write signs above matrix columns
+        signs = VGroup()
         for col_index in range(len(m1.get_columns()[0])):
             text = MathTex("+" if col_index % 2 == 0 else "-").set_color(
                 GREEN if col_index % 2 == 0 else RED
@@ -89,64 +152,90 @@ class VektorelCarpim(Scene):
                     UP * (1.4 if col_index % 2 == 0 else 2),
                 )
             )
+            signs.add(text)
             self.play(Write(text), run_time=SHORT)
 
+        # Dim rows-cols
         entries_to_dim = VGroup()
         entries_to_highlight = VGroup()
-
-        # Dim rows-cols
-        for col in range(len(m1.get_mob_matrix())):
-            for row in range(len(m1.get_mob_matrix()[col])):
-                entry = m1.get_mob_matrix()[col][row]
-                if col == 0 and row == 0:
-                    continue
-                if col == 0 or row == 0:
-                    entries_to_dim.add(entry)
-                else:
-                    entries_to_highlight.add(entry)
-
-        self.play(
-            LaggedStart(
-                *[ApplyMethod(entry.set_opacity, 0.5) for entry in entries_to_dim],
-                lag_ratio=0.2,
-                run_time=0.5
-            )
-        )
+        dim_rows_cols(entries_to_dim, entries_to_highlight, 0)
 
         # highlight bottom right of the matrix
         self.play(multEq.animate.to_corner(LEFT, buff=0.5))
         self.play(Circumscribe(entries_to_highlight), run_time=1.5)
+
         eq_sign = MathTex("=").next_to(m1)
         self.play(Write(eq_sign), run_time=SHORT)
 
-        # i right multiplication
-        start_x, start_y = (1, 1)
+        # i multiplication
         i = m1.get_mob_matrix()[0][0].copy()
-        up_left = m1.get_mob_matrix()[start_y][start_x].copy()
-        up_right = m1.get_mob_matrix()[start_y][start_x + 1].copy()
-        down_left = m1.get_mob_matrix()[start_y + 1][start_x].copy()
-        down_right = m1.get_mob_matrix()[start_y + 1][start_x + 1].copy()
-        i_mult = m1.get_mob_matrix()[0][0].copy().next_to(eq_sign)
-        self.play(TransformMatchingShapes(i, i_mult), run_time=MEDIUM)
-        ul_dr_mult = MathTex("(5 * 2 ").next_to(i_mult)
-        ur_dl_mult = MathTex("- 3 * 1)").next_to(ul_dr_mult)
-        self.play(
-            TransformMatchingShapes(VGroup(up_left, down_right), ul_dr_mult),
-            run_time=MEDIUM,
+        up_left = m1.get_mob_matrix()[1][1].copy()
+        up_right = m1.get_mob_matrix()[1][2].copy()
+        down_left = m1.get_mob_matrix()[2][1].copy()
+        down_right = m1.get_mob_matrix()[2][2].copy()
+        sign = signs[0].copy()
+        sign.clear_updaters()
+
+        i = play_multiplications(
+            i, eq_sign, up_left, up_right, down_left, down_right, sign
         )
-        self.play(
-            TransformMatchingShapes(VGroup(up_right, down_left), ur_dl_mult),
-            run_time=MEDIUM,
-        )
-        i_val = MathTex("7").next_to(i_mult)
-        self.play(Transform(VGroup(ul_dr_mult, ur_dl_mult), i_val, run_time=MEDIUM))
 
         # return back to color
         self.play(
             LaggedStart(
                 *[ApplyMethod(entry.set_opacity, 1) for entry in entries_to_dim],
                 lag_ratio=0.2,
-                run_time=0.5
+                run_time=0.5,
+            )
+        )
+
+        # Dim rows-cols
+        entries_to_dim = VGroup()
+        entries_to_highlight = VGroup()
+        dim_rows_cols(entries_to_dim, entries_to_highlight, 1)
+
+        # j multiplication
+        j = m1.get_mob_matrix()[0][1].copy()
+        up_left = m1.get_mob_matrix()[1][0].copy()
+        up_right = m1.get_mob_matrix()[1][2].copy()
+        down_left = m1.get_mob_matrix()[2][0].copy()
+        down_right = m1.get_mob_matrix()[2][2].copy()
+        sign = signs[1].copy()
+        sign.clear_updaters()
+
+        j = play_multiplications(j, i, up_left, up_right, down_left, down_right, sign)
+
+        # return back to color
+        self.play(
+            LaggedStart(
+                *[ApplyMethod(entry.set_opacity, 1) for entry in entries_to_dim],
+                lag_ratio=0.2,
+                run_time=0.5,
+            )
+        )
+
+        # Dim rows-cols
+        entries_to_dim = VGroup()
+        entries_to_highlight = VGroup()
+        dim_rows_cols(entries_to_dim, entries_to_highlight, 2)
+
+        # k multiplication
+        k = m1.get_mob_matrix()[0][2].copy()
+        up_left = m1.get_mob_matrix()[1][0].copy()
+        up_right = m1.get_mob_matrix()[1][1].copy()
+        down_left = m1.get_mob_matrix()[2][0].copy()
+        down_right = m1.get_mob_matrix()[2][1].copy()
+        sign = signs[2].copy()
+        sign.clear_updaters()
+
+        k = play_multiplications(k, j, up_left, up_right, down_left, down_right, sign)
+
+        # return back to color
+        self.play(
+            LaggedStart(
+                *[ApplyMethod(entry.set_opacity, 1) for entry in entries_to_dim],
+                lag_ratio=0.2,
+                run_time=0.5,
             )
         )
 
