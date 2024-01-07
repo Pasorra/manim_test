@@ -75,9 +75,19 @@ class VektorelCarpim(Scene):
             self.play(Swap(letter_mult, letter_val), run_time=SHORT)
             return letter_mult
 
-        # global variables
+        # global variables and setup
+        self.camera.background_color = ManimColor("#212529")
         isolated_subs = [r"\hat{\textbf{\i}}", r"\hat{\textbf{\j}}", r"\hat{k}"]
-        ijk_colors = [RED, GREEN, BLUE]
+        ijk_colors = [
+            ManimColor("#FCC6FF"),
+            ManimColor("#FCC6FF"),
+            ManimColor("#FCC6FF"),
+        ]
+        sign_colors = [
+            ManimColor("#9BF6FF"),
+            ManimColor("#BDB2FF"),
+        ]
+        circumscribe_color = ManimColor("#FDFFB6")
 
         # initializing equations
         vecA = MathTex(r"\vec{A}=")
@@ -144,7 +154,7 @@ class VektorelCarpim(Scene):
         signs = VGroup()
         for col_index in range(len(m1.get_columns()[0])):
             text = MathTex("+" if col_index % 2 == 0 else "-").set_color(
-                GREEN if col_index % 2 == 0 else RED
+                sign_colors[1] if col_index % 2 == 0 else sign_colors[0]
             )
             text.add_updater(
                 lambda x, col_index=col_index: x.next_to(
@@ -162,7 +172,10 @@ class VektorelCarpim(Scene):
 
         # highlight bottom right of the matrix
         self.play(multEq.animate.to_corner(LEFT, buff=0.5))
-        self.play(Circumscribe(entries_to_highlight), run_time=1.5)
+        self.play(
+            Circumscribe(entries_to_highlight, color=circumscribe_color),
+            run_time=1.5,
+        )
 
         eq_sign = MathTex("=").next_to(m1)
         self.play(Write(eq_sign), run_time=SHORT)
