@@ -79,13 +79,13 @@ class VektorelCarpim(Scene):
         self.camera.background_color = ManimColor("#212529")
         isolated_subs = [r"\hat{\textbf{\i}}", r"\hat{\textbf{\j}}", r"\hat{k}"]
         ijk_colors = [
-            ManimColor("#FCC6FF"),
-            ManimColor("#FCC6FF"),
-            ManimColor("#FCC6FF"),
+            ManimColor("#d4a373"),
+            ManimColor("#b0c4b1"),
+            ManimColor("#d4a373"),
         ]
         sign_colors = [
-            ManimColor("#9BF6FF"),
-            ManimColor("#BDB2FF"),
+            ManimColor("#ef233c"),
+            ManimColor("#a7c957"),
         ]
         circumscribe_color = ManimColor("#FDFFB6")
 
